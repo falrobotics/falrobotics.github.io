@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fal Robotics — The foundation model for plant manipulation</title>
+  <meta name="description" content="Generalized control intelligence for agricultural robots. One learned brain for assess, harvest, and prune — across crops, from simulation to hardware." />
+
+  <!-- GSAP + ScrollTrigger (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+
+  <style>
+    /* ========== RESET & TOKENS ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-mercury-blue: #5266eb;
+      --color-ghost-blue: #cdddff;
+      --color-deep-space: #171721;
+      --color-midnight-slate: #1e1e2a;
+      --color-graphite: #272735;
+      --color-lead: #70707d;
+      --color-starlight: #ededf3;
+      --color-silver: #c3c3cc;
+      --color-pure-white: #ffffff;
+      --bg-deep: #171721;
+      --bg-panel: #1e1e2a;
+      --bg-elevated: #272735;
+      --text-primary: #ededf3;
+      --text-muted: #c3c3cc;
+      --accent-green: #cdddff;
+      --accent-green-dim: #5266eb;
+      --accent-amber: #70707d;
+      --accent-amber-dim: #70707d;
+      --border-subtle: rgba(112, 112, 125, 0.35);
+      --font-display: "Inter", "Manrope", ui-sans-serif, system-ui, sans-serif;
+      --font-mono: "Inter", ui-sans-serif, system-ui, sans-serif;
+      --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+      --text-display: clamp(42px, 8vw, 65px);
+      --page-max-width: 1200px;
+      --radius-pill: 32px;
+      --radius-pill-lg: 40px;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --scroll-progress: 0%;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      overflow-x: hidden;
+      background: var(--bg-deep);
+      line-height: 1.5;
+    }
+
+    /* ========== SCROLL PROGRESS BAR ========== */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: var(--scroll-progress);
+      background: var(--color-mercury-blue);
+      z-index: 10000;
+      pointer-events: none;
+      transform-origin: left;
+    }
+
+    /* ========== FILM GRAIN & VIGNETTE ========== */
+    .film-overlay { display: none; }
+
+    /* ========== NAV ========== */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px clamp(20px, 5vw, 40px);
+      background: linear-gradient(to bottom, rgba(23, 23, 33, 0.72) 0%, transparent 100%);
+      transition: background 0.5s var(--ease-out);
+    }
+
+    .nav.is-solid {
+      background: rgba(30, 30, 42, 0.92);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-logo {
+      font-size: 14px;
+      font-weight: 480;
+      letter-spacing: 0.02em;
+      color: var(--color-starlight);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--color-starlight); }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 20px;
+      font-size: 14px;
+      font-weight: 480;
+      letter-spacing: 0.01em;
+      color: var(--color-starlight);
+      text-decoration: none;
+      background: rgba(205, 221, 255, 0.2);
+      border-radius: var(--radius-pill-lg);
+      transition: background 0.35s var(--ease-out);
+    }
+
+    .nav-cta:hover { background: rgba(205, 221, 255, 0.32); }
+
+    /* ========== HERO — Mercury full-bleed video ========== */
+    .hero {
+      position: relative;
+      height: 100vh;
+      height: 100dvh;
+      min-height: 560px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero-media {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      will-change: transform, opacity;
+    }
+
+    .hero-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 40%;
+      transform: scale(1.08);
+      will-change: transform;
+    }
+
+    .hero-media-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to bottom, rgba(23, 23, 33, 0.4) 0%, rgba(23, 23, 33, 0.12) 45%, rgba(23, 23, 33, 0.82) 100%),
+        radial-gradient(ellipse 80% 60% at 50% 50%, transparent 25%, rgba(23, 23, 33, 0.55) 100%);
+      pointer-events: none;
+    }
+
+    .hero-vignette {
+      position: absolute;
+      inset: 0;
+      background: var(--color-deep-space);
+      opacity: 0;
+      pointer-events: none;
+      will-change: opacity;
+    }
+
+    .hero-center {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      max-width: var(--page-max-width);
+      padding: clamp(100px, 18vh, 140px) clamp(24px, 5vw, 40px) 80px;
+      will-change: transform, opacity, filter;
+    }
+
+    .hero-brand {
+      font-size: 14px;
+      font-weight: 480;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      color: var(--color-silver);
+    }
+
+    .hero-brand span { color: var(--color-silver); }
+
+    .hero-eyebrow {
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-silver);
+      margin-bottom: 24px;
+    }
+
+    .hero-headline {
+      font-family: var(--font-display);
+      font-size: var(--text-display);
+      font-weight: 300;
+      line-height: 1.1;
+      letter-spacing: 0.01em;
+      color: var(--color-starlight);
+      margin-bottom: 24px;
+      max-width: 14ch;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-tagline-lead {
+      font-size: 21px;
+      font-weight: 300;
+      color: var(--color-starlight);
+      line-height: 1.35;
+      margin-bottom: 16px;
+    }
+
+    .hero-tagline {
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--color-silver);
+      line-height: 1.5;
+      max-width: 52ch;
+      margin: 0 auto 40px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px;
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 480;
+      letter-spacing: 0.01em;
+      color: var(--color-pure-white);
+      background: var(--color-mercury-blue);
+      border: none;
+      border-radius: var(--radius-pill);
+      text-decoration: none;
+      cursor: pointer;
+      transition: filter 0.35s var(--ease-out);
+      will-change: transform;
+    }
+
+    .btn-primary:hover { filter: brightness(1.1); }
+
+    .hero-scroll-hint {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-silver);
+      z-index: 2;
+      opacity: 0.7;
+      text-align: center;
+    }
+
+    .hero-scroll-hint::after {
+      content: "";
+      display: block;
+      width: 1px;
+      height: 40px;
+      margin: 12px auto 0;
+      background: linear-gradient(to bottom, var(--color-lead), transparent);
+      animation: scroll-pulse 2.5s ease-in-out infinite;
+    }
+
+    .content-wrap {
+      background: var(--color-midnight-slate);
+      position: relative;
+      z-index: 3;
+    }
+
+    .hero-inner,
+    .hero-bg,
+    .hero-visual,
+    .hero-content { display: none; }
+
+    @keyframes scroll-pulse {
+      0%, 100% { opacity: 0.3; transform: scaleY(0.6); }
+      50% { opacity: 1; transform: scaleY(1); }
+    }
+
+    /* ========== PROBLEM STATEMENT ========== */
+    /* SECTION: PROBLEM — edit copy below */
+    .section-label {
+      font-size: 12px;
+      font-weight: 480;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-lead);
+      margin-bottom: 24px;
+    }
+
+    .section-problem {
+      padding: clamp(80px, 14vh, 128px) clamp(24px, 5vw, 40px);
+      max-width: var(--page-max-width);
+      margin: 0 auto;
+    }
+
+    .section-problem h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 300;
+      line-height: 1.15;
+      letter-spacing: 0.01em;
+      margin-bottom: 24px;
+      color: var(--color-starlight);
+    }
+
+    .section-problem p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-problem p:last-child {
+      margin-bottom: 0;
+      color: var(--text-primary);
+    }
+
+    /* ========== PINNED CAPABILITIES ========== */
+    /* SECTION: WHAT IT DOES — edit capability titles & body in HTML */
+    .section-capabilities {
+      position: relative;
+    }
+
+    .capabilities-pin {
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 clamp(1.5rem, 6vw, 5rem);
+      overflow: hidden;
+    }
+
+    .capabilities-inner {
+      width: 100%;
+      max-width: 72rem;
+    }
+
+    .capabilities-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.95fr);
+      gap: clamp(2rem, 5vw, 4rem);
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .capabilities-body {
+        grid-template-columns: 1fr;
+      }
+
+      .capability-viz-stage {
+        order: -1;
+        max-height: 280px;
+      }
+    }
+
+    .capabilities-header {
+      margin-bottom: 4rem;
+    }
+
+    .capabilities-header h2 {
+      font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .capabilities-progress {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 2rem;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+
+    .capabilities-progress-seg {
+      flex: 1;
+      height: 100%;
+      background: var(--accent-green);
+      transform: scaleX(0);
+      transform-origin: left;
+      will-change: transform;
+    }
+
+    .capability-slides {
+      position: relative;
+      min-height: 22rem;
+    }
+
+    .capability-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      will-change: transform, opacity;
+    }
+
+    .capability-slide.is-active {
+      visibility: visible;
+    }
+
+    .capability-slide h3 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .capability-slide h3 em {
+      font-style: normal;
+      color: var(--accent-green);
+    }
+
+    .capability-slide p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 48ch;
+      line-height: 1.65;
+      margin-bottom: 1rem;
+    }
+
+    .capability-slide ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .capability-slide li {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding-left: 1.25rem;
+      position: relative;
+      margin-bottom: 0.5rem;
+      max-width: 48ch;
+    }
+
+    .capability-slide li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.65em;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      opacity: 0.7;
+    }
+
+    .capability-viz-stage {
+      position: relative;
+      aspect-ratio: 1;
+      width: 100%;
+      max-height: min(42vh, 420px);
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .capability-viz-stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 80%, rgba(61, 220, 107, 0.06) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .capability-viz {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      will-change: transform, opacity, filter;
+      z-index: 1;
+    }
+
+    .capability-viz.is-active {
+      visibility: visible;
+    }
+
+    .capability-viz svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .viz-scan-line {
+      stroke: var(--accent-green);
+      stroke-width: 1;
+      opacity: 0.7;
+    }
+
+    .viz-bbox {
+      fill: none;
+      stroke: var(--accent-green);
+      stroke-width: 1;
+      opacity: 0;
+    }
+
+    .viz-mask {
+      fill: rgba(61, 220, 107, 0.12);
+      stroke: var(--accent-green);
+      stroke-width: 0.5;
+      opacity: 0;
+    }
+
+    .viz-arm {
+      fill: none;
+      stroke: var(--text-primary);
+      stroke-width: 1.2;
+      stroke-linecap: round;
+    }
+
+    .viz-force {
+      stroke: var(--accent-amber);
+      stroke-width: 1;
+      opacity: 0;
+    }
+
+    .viz-contact {
+      fill: var(--accent-amber);
+      opacity: 0;
+    }
+
+    .viz-crop-node {
+      fill: var(--accent-green);
+      opacity: 0.5;
+    }
+
+    .viz-brain-core {
+      fill: var(--accent-green);
+      filter: drop-shadow(0 0 12px rgba(61, 220, 107, 0.5));
+    }
+
+    .viz-link {
+      stroke: rgba(61, 220, 107, 0.25);
+      stroke-width: 0.8;
+    }
+
+    /* ========== SIM-TO-REAL ========== */
+    /* SECTION: CORE IDEA — edit panel copy */
+    .section-simreal {
+      position: relative;
+      min-height: 200vh;
+      padding: 0 clamp(1.5rem, 6vw, 5rem);
+    }
+
+    .simreal-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .simreal-panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(2rem, 8vw, 6rem);
+      width: 100%;
+      max-width: 72rem;
+      position: relative;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .simreal-panels { grid-template-columns: 1fr; gap: 3rem; }
+    }
+
+    .simreal-panel {
+      padding: clamp(2rem, 4vw, 3rem);
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      will-change: transform, opacity;
+    }
+
+    .simreal-panel h3 {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-amber);
+      margin-bottom: 1rem;
+    }
+
+    .simreal-panel h4 {
+      font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .simreal-panel p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 0.85rem;
+    }
+
+    .simreal-panel p:last-child {
+      margin-bottom: 0;
+    }
+
+    .simreal-panel-viz {
+      height: 140px;
+      margin-bottom: 1.5rem;
+      border-radius: 2px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .simreal-panel-viz svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .sim-plant {
+      fill: none;
+      stroke: rgba(61, 220, 107, 0.35);
+      stroke-width: 0.8;
+    }
+
+    .real-arm {
+      fill: none;
+      stroke: var(--accent-amber);
+      stroke-width: 1.2;
+      stroke-linecap: round;
+    }
+
+    .transfer-particle {
+      fill: var(--accent-green);
+    }
+
+    .gallery-card-viz {
+      height: 100px;
+      margin-bottom: 1.25rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      overflow: hidden;
+      opacity: 0.7;
+      transition: opacity 0.5s var(--ease-out);
+    }
+
+    .gallery-card.is-center .gallery-card-viz {
+      opacity: 1;
+    }
+
+    .gallery-card-viz svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .hero-visual svg .hero-pulse {
+      transform-origin: center;
+    }
+
+    .simreal-connector {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(80px, 15vw, 140px);
+      height: 2px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .simreal-connector svg {
+      width: 100%;
+      height: 80px;
+      overflow: visible;
+    }
+
+    .simreal-line {
+      stroke: var(--accent-green);
+      stroke-width: 1.5;
+      fill: none;
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
+      opacity: 0.6;
+    }
+
+    .simreal-particles {
+      fill: var(--accent-amber);
+      opacity: 0;
+    }
+
+    /* ========== STATS ========== */
+    /* SECTION: STATS — edit data-stat-target values */
+    .section-stats {
+      padding: clamp(6rem, 14vh, 10rem) clamp(1.5rem, 6vw, 5rem);
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      max-width: 72rem;
+      margin: 0 auto;
+    }
+
+    .stats-label {
+      margin-bottom: 2.5rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: clamp(2rem, 5vw, 4rem);
+      max-width: 72rem;
+      margin: 0 auto;
+    }
+
+    .stat-item {
+      text-align: left;
+    }
+
+    .stat-value {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      color: var(--accent-green);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value .stat-prefix,
+    .stat-value .stat-suffix {
+      font-size: 0.6em;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .stat-label {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 22ch;
+      line-height: 1.5;
+    }
+
+    /* ========== HORIZONTAL CROP GALLERY ========== */
+    /* SECTION: GALLERY — edit crop cards in HTML */
+    .section-gallery {
+      position: relative;
+      padding: clamp(4rem, 10vh, 8rem) 0;
+    }
+
+    .gallery-header {
+      padding: 0 clamp(1.5rem, 6vw, 5rem) 3rem;
+      max-width: 40rem;
+    }
+
+    .gallery-header h2 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+
+    .gallery-header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .gallery-track-wrap {
+      overflow: hidden;
+    }
+
+    .gallery-track {
+      display: flex;
+      gap: 1.5rem;
+      padding: 2rem clamp(1.5rem, 6vw, 5rem);
+      will-change: transform;
+    }
+
+    .gallery-card {
+      flex: 0 0 min(320px, 85vw);
+      padding: 2.5rem 2rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 0;
+      will-change: transform, opacity, filter;
+      transition: border-color 0.5s var(--ease-out);
+    }
+
+    .gallery-card.is-center {
+      border-color: var(--color-lead);
+    }
+
+    .gallery-card-crop {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent-amber);
+      margin-bottom: 1rem;
+    }
+
+    .gallery-card h3 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .gallery-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .gallery-spacer {
+      height: 80vh;
+    }
+
+    /* ========== INFRASTRUCTURE COPY ========== */
+    /* SECTION: INFRASTRUCTURE — edit positioning copy */
+    .section-infra {
+      padding: clamp(8rem, 16vh, 12rem) clamp(1.5rem, 6vw, 5rem);
+      max-width: 52rem;
+      margin: 0 auto;
+    }
+
+    .section-infra h2 {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-infra h2 span {
+      color: var(--color-starlight);
+    }
+
+    .section-infra p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+
+    .section-infra ul {
+      list-style: none;
+      margin: 0 0 1.5rem;
+      padding: 0;
+    }
+
+    .section-infra li {
+      font-size: 1rem;
+      color: var(--text-muted);
+      padding-left: 1.25rem;
+      position: relative;
+      margin-bottom: 0.45rem;
+      line-height: 1.5;
+    }
+
+    .section-infra li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.55em;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent-amber);
+      opacity: 0.75;
+    }
+
+    .infra-tagline {
+      font-size: 1.15rem !important;
+      color: var(--text-primary) !important;
+      font-weight: 500;
+      margin: 1.5rem 0 !important;
+    }
+
+    .infra-audience-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-amber);
+      margin-bottom: 0.75rem !important;
+    }
+
+    .infra-close {
+      color: var(--text-primary) !important;
+      margin-top: 1.5rem !important;
+    }
+
+    /* ========== CLOSING CTA ========== */
+    /* SECTION: CTA — edit company name, button text, href */
+    .section-cta {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem clamp(1.5rem, 6vw, 5rem);
+      overflow: hidden;
+    }
+
+    .cta-ambient {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 100% 80% at 50% 100%, rgba(61, 220, 107, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(232, 184, 74, 0.04) 0%, transparent 60%);
+      will-change: transform, opacity;
+    }
+
+    .cta-ambient-orb {
+      position: absolute;
+      width: 40vmax;
+      height: 40vmax;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(61, 220, 107, 0.08) 0%, transparent 70%);
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      filter: blur(60px);
+      animation: cta-orb 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes cta-orb {
+      0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.5; }
+      100% { transform: translate(-48%, -52%) scale(1.1); opacity: 0.8; }
+    }
+
+    .cta-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+
+    .cta-brand {
+      font-size: clamp(3rem, 12vw, 7rem);
+      font-weight: 500;
+      letter-spacing: -0.04em;
+      margin-bottom: 0.25em;
+      line-height: 1;
+    }
+
+    .cta-brand span { color: var(--color-starlight); }
+
+    .cta-ambient {
+      background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(82, 102, 235, 0.08) 0%, transparent 55%);
+    }
+
+    .cta-ambient-orb {
+      background: radial-gradient(circle, rgba(205, 221, 255, 0.06) 0%, transparent 70%);
+    }
+
+    .stat-value {
+      color: var(--color-starlight);
+    }
+
+    .capabilities-progress-seg {
+      background: var(--color-ghost-blue);
+    }
+
+    .simreal-line {
+      stroke: var(--color-ghost-blue);
+    }
+
+    .transfer-particle {
+      fill: var(--color-ghost-blue);
+    }
+
+    .cta-sub {
+      font-size: clamp(0.85rem, 1.5vw, 1rem);
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+    }
+
+    .cta-button-wrap {
+      display: inline-block;
+      position: relative;
+    }
+
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px;
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 480;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      color: var(--color-pure-white);
+      background: var(--color-mercury-blue);
+      border: none;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+      transition: filter 0.35s var(--ease-out);
+      will-change: transform;
+    }
+
+    .cta-button:hover {
+      filter: brightness(1.1);
+    }
+
+    .cta-footer {
+      position: absolute;
+      bottom: 2rem;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      opacity: 0.6;
+      z-index: 2;
+    }
+
+    /* ========== REDUCED MOTION ========== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .hero-scroll-hint::after { animation: none; }
+      .cta-ambient-orb { animation: none; }
+    }
+  </style>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;420;480;500&family=Manrope:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Scroll progress (driven by JS) -->
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+  <div class="film-overlay" aria-hidden="true"></div>
+
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <a href="#" class="nav-logo">Fal Robotics</a>
+    <a href="#cta" class="nav-cta">Request Access</a>
+  </nav>
+
+  <!-- ========== SECTION: HERO — full-bleed video ========== -->
+  <header class="hero" id="hero">
+    <div class="hero-media" id="heroMedia">
+      <video
+        id="heroVideo"
+        class="hero-video"
+        muted
+        playsinline
+        preload="auto"
+        poster=""
+      >
+        <source src="assets/teaser_descent.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-media-overlay" id="heroOverlay"></div>
+      <div class="hero-vignette" id="heroVignette" aria-hidden="true"></div>
+    </div>
+
+    <div class="hero-center" id="heroCenter">
+      <p class="hero-brand">Fal Robotics</p>
+      <p class="hero-eyebrow">Control intelligence for agricultural robotics</p>
+      <h1 class="hero-headline">One brain for the whole field.</h1>
+      <p class="hero-tagline-lead">The foundation model for plant manipulation.</p>
+      <p class="hero-tagline">
+        A single learned policy that enables robotic systems to interact physically with plants — assess, harvest, prune, and manipulate — trained in simulation and deployed on real hardware.
+      </p>
+      <a href="#cta" class="btn-primary" id="heroCta">Request Access</a>
+    </div>
+
+    <div class="hero-scroll-hint">Scroll</div>
+  </header>
+
+  <div class="content-wrap">
+  <!-- ========== SECTION: PROBLEM ========== -->
+  <section class="section-problem" id="problem">
+    <p class="section-label">The Problem</p>
+    <h2>Plants are not rigid. Traditional robots assume they are.</h2>
+    <p>Every stem bends differently. Every fruit detaches differently. Every contact is uncertain.</p>
+    <p>Conventional automation breaks when the environment changes — new cultivars, dense canopy, variable lighting, irregular growth, or unpredictable contact forces.</p>
+    <p>Agricultural robotics does not need another scripted demo. It needs intelligence that generalizes physical interaction.</p>
+  </section>
+
+  <!-- ========== SECTION: WHAT IT DOES (pinned scroll) ========== -->
+  <section class="section-capabilities" id="capabilities">
+    <div class="capabilities-pin">
+      <div class="capabilities-inner">
+        <div class="capabilities-header">
+          <p class="section-label">What It Does</p>
+          <h2>One brain. Multiple capabilities. No brittle scripts.</h2>
+          <div class="capabilities-progress" aria-hidden="true">
+            <div class="capabilities-progress-seg" data-seg="0"></div>
+            <div class="capabilities-progress-seg" data-seg="1"></div>
+            <div class="capabilities-progress-seg" data-seg="2"></div>
+          </div>
+        </div>
+
+        <div class="capabilities-body">
+          <div class="capability-copy">
+            <div class="capability-slides">
+              <article class="capability-slide is-active" data-cap="0">
+                <h3>Understands plant structure</h3>
+                <p>Vision and segmentation models interpret plant geometry beneath dense canopy:</p>
+                <ul>
+                  <li>Detect fruit location and maturity</li>
+                  <li>Infer stem position and compliance</li>
+                  <li>Identify regions that must not be damaged</li>
+                </ul>
+              </article>
+              <article class="capability-slide" data-cap="1">
+                <h3>Learns physical interaction</h3>
+                <p>Control policies trained for contact-rich manipulation:</p>
+                <ul>
+                  <li>Harvesting</li>
+                  <li>Pruning</li>
+                  <li>Pick-and-place</li>
+                  <li>Selective cutting</li>
+                  <li>Contact-aware probing</li>
+                </ul>
+              </article>
+              <article class="capability-slide" data-cap="2">
+                <h3>Generalizes across crops</h3>
+                <p>A shared policy architecture transfers across crops, cultivars, and field conditions without rewriting task logic.</p>
+              </article>
+            </div>
+          </div>
+
+          <!-- Capability viz — morphs 1→2→3 on scroll -->
+          <div class="capability-viz-stage" aria-hidden="true">
+            <div class="capability-viz is-active" data-viz="0" id="capViz0">
+              <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="viz-plant-base" d="M160 280 L160 140 Q120 100 90 70 Q70 45 95 35" stroke="#cdddff" stroke-width="1" opacity="0.4"/>
+                <path class="viz-plant-base" d="M160 200 Q200 160 230 90 Q245 55 215 40" stroke="#cdddff" stroke-width="0.8" opacity="0.35"/>
+                <ellipse cx="160" cy="95" rx="18" ry="28" class="viz-mask" id="vizMaskFruit"/>
+                <rect class="viz-bbox" id="vizBbox1" x="125" y="65" width="70" height="55" rx="2"/>
+                <rect class="viz-bbox" id="vizBbox2" x="75" y="45" width="45" height="40" rx="2"/>
+                <line class="viz-scan-line" id="vizScanLine" x1="40" y1="0" x2="280" y2="0"/>
+                <circle cx="160" cy="95" r="4" fill="#cdddff" opacity="0.6" class="hero-pulse"/>
+              </svg>
+            </div>
+            <div class="capability-viz" data-viz="1" id="capViz1">
+              <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="viz-plant-base" d="M160 280 L160 150" stroke="#cdddff" stroke-width="0.8" opacity="0.35"/>
+                <path class="viz-arm" id="vizArmPath" d="M60 80 L120 110 L160 130 L200 115 L260 95" stroke-dasharray="280"/>
+                <line class="viz-force" id="vizForce1" x1="160" y1="130" x2="160" y2="175"/>
+                <line class="viz-force" id="vizForce2" x1="200" y1="115" x2="235" y2="140"/>
+                <polygon class="viz-force" id="vizForceHead1" points="160,175 154,165 166,165" fill="#70707d"/>
+                <polygon class="viz-force" id="vizForceHead2" points="235,140 229,132 241,134" fill="#70707d"/>
+                <circle class="viz-contact" id="vizContact" cx="160" cy="130" r="10"/>
+              </svg>
+            </div>
+            <div class="capability-viz" data-viz="2" id="capViz2">
+              <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line class="viz-link" x1="160" y1="160" x2="80" y2="90"/>
+                <line class="viz-link" x1="160" y1="160" x2="250" y2="75"/>
+                <line class="viz-link" x1="160" y1="160" x2="70" y2="220"/>
+                <line class="viz-link" x1="160" y1="160" x2="255" y2="235"/>
+                <circle class="viz-brain-core" cx="160" cy="160" r="14" id="vizBrain"/>
+                <circle class="viz-crop-node" id="vizCrop1" cx="80" cy="90" r="8"/>
+                <circle class="viz-crop-node" id="vizCrop2" cx="250" cy="75" r="7"/>
+                <circle class="viz-crop-node" id="vizCrop3" cx="70" cy="220" r="9"/>
+                <circle class="viz-crop-node" id="vizCrop4" cx="255" cy="235" r="7"/>
+                <path class="viz-crop-node" id="vizCropShape1" d="M76 86 L84 86 L84 94 L76 94Z" fill="#70707d" opacity="0.5"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SECTION: SIM-TO-REAL ========== -->
+  <section class="section-simreal" id="simreal">
+    <div class="simreal-sticky">
+      <div class="simreal-panels">
+        <div class="simreal-panel" id="panelSim">
+          <div class="simreal-panel-viz" id="simPanelViz" aria-hidden="true">
+            <svg viewBox="0 0 280 140" preserveAspectRatio="xMidYMid slice">
+              <g id="simPlantGrid"></g>
+            </svg>
+          </div>
+          <h3>Training</h3>
+          <h4>Trained in simulation</h4>
+          <p>Thousands of randomized plant morphologies, lighting conditions, occlusions, and contact scenarios are generated in parallel.</p>
+          <p>Simulation enables training cycles that would otherwise require years of field data collection.</p>
+        </div>
+
+        <div class="simreal-connector" aria-hidden="true">
+          <svg viewBox="0 0 140 120">
+            <path class="simreal-line" id="simrealLine" d="M 0 60 Q 70 15 140 60" />
+            <path id="simrealMotionPath" d="M 0 60 Q 70 15 140 60" fill="none" stroke="none"/>
+            <circle class="transfer-particle" id="transferP1" r="3" opacity="0"/>
+            <circle class="transfer-particle" id="transferP2" r="2" opacity="0"/>
+            <circle class="transfer-particle" id="transferP3" r="2.5" opacity="0"/>
+            <circle class="simreal-particles" id="simParticle1" cx="35" cy="42" r="2" />
+            <circle class="simreal-particles" id="simParticle2" cx="70" cy="28" r="2.5" />
+            <circle class="simreal-particles" id="simParticle3" cx="105" cy="42" r="2" />
+          </svg>
+        </div>
+
+        <div class="simreal-panel" id="panelReal">
+          <div class="simreal-panel-viz" id="realPanelViz" aria-hidden="true">
+            <svg viewBox="0 0 280 140" preserveAspectRatio="xMidYMid slice">
+              <path class="viz-plant-base" d="M140 120 L140 55 Q110 40 95 25" stroke="#cdddff" stroke-width="1" opacity="0.5"/>
+              <path class="real-arm" id="realArm" d="M40 30 L90 50 L130 70 L155 82" stroke-dasharray="120"/>
+              <circle id="realContactGlow" cx="155" cy="82" r="8" fill="rgba(112,112,125,0.25)" stroke="#70707d" stroke-width="0.8" opacity="0"/>
+            </svg>
+          </div>
+          <h3>Deployment</h3>
+          <h4>Deployed on real hardware</h4>
+          <p>The same policy weights trained in simulation run directly on robotic systems in the field.</p>
+          <p>Sim-to-real transfer is built into the training objective from the beginning — not added later as a workaround.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SECTION: STATS ========== -->
+  <section class="section-stats" id="stats">
+    <p class="section-label stats-label">Metrics</p>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value">
+          <span class="stat-prefix">&gt;</span><span class="stat-number" data-stat-target="80" data-stat-suffix="%">0</span>
+        </div>
+        <p class="stat-label">Real-world task success across initial deployment partners</p>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">
+          <span class="stat-number" data-stat-target="10000" data-stat-format="compact">0</span><span class="stat-suffix">+</span>
+        </div>
+        <p class="stat-label">Parallel simulation trials per training cycle</p>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">1</div>
+        <p class="stat-label">Unified policy architecture across crops and manipulation tasks</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SECTION: HORIZONTAL GALLERY ========== -->
+  <section class="section-gallery" id="gallery">
+    <div class="gallery-header">
+      <p class="section-label">Generalization</p>
+      <h2>One policy stack. Any crop you run.</h2>
+      <p>The system adapts to new plant morphologies and manipulation tasks without rebuilding the robotics platform.</p>
+    </div>
+
+    <div class="gallery-track-wrap">
+      <div class="gallery-track" id="galleryTrack">
+        <!-- GALLERY CARDS — duplicate or edit as needed -->
+        <article class="gallery-card" data-crop="strawberries">
+          <div class="gallery-card-viz" aria-hidden="true">
+            <svg viewBox="0 0 200 100"><circle class="g-pulse" cx="60" cy="55" r="8" fill="#70707d" opacity="0.6"/><circle class="g-pulse" cx="100" cy="40" r="10" fill="#cdddff" opacity="0.5"/><path d="M100 90 L100 50" stroke="#cdddff" stroke-width="0.8" opacity="0.4"/></svg>
+          </div>
+          <p class="gallery-card-crop">Strawberries</p>
+          <h3>Precision Harvest</h3>
+          <p>Navigate dense foliage and delicate stems to harvest ripe fruit without bruising.</p>
+        </article>
+        <article class="gallery-card" data-crop="apples">
+          <div class="gallery-card-viz" aria-hidden="true">
+            <svg viewBox="0 0 200 100"><circle cx="120" cy="45" r="18" fill="none" stroke="#70707d" stroke-width="0.8" opacity="0.5"/><path class="g-arm" d="M30 25 L80 45 L115 55" stroke="#70707d" stroke-width="1" fill="none" stroke-dasharray="80"/></svg>
+          </div>
+          <p class="gallery-card-crop">Apples</p>
+          <h3>Pick &amp; Place</h3>
+          <p>Learn cultivar-specific detachment forces for gentle harvesting and premium pack-out quality.</p>
+        </article>
+        <article class="gallery-card" data-crop="grapes">
+          <div class="gallery-card-viz" aria-hidden="true">
+            <svg viewBox="0 0 200 100"><path d="M40 80 Q70 30 100 80 Q130 30 160 80" stroke="#cdddff" stroke-width="0.8" fill="none" opacity="0.45"/><circle class="g-pulse" cx="70" cy="55" r="5" fill="#cdddff"/><circle class="g-pulse" cx="100" cy="50" r="5" fill="#cdddff"/><circle class="g-pulse" cx="130" cy="55" r="5" fill="#cdddff"/></svg>
+          </div>
+          <p class="gallery-card-crop">Grapes</p>
+          <h3>Selective Cutting</h3>
+          <p>Perform force-guided stem cutting inside constrained vineyard canopies.</p>
+        </article>
+        <article class="gallery-card" data-crop="peppers">
+          <div class="gallery-card-viz" aria-hidden="true">
+            <svg viewBox="0 0 200 100"><ellipse cx="100" cy="55" rx="12" ry="22" fill="none" stroke="#70707d" stroke-width="0.8" opacity="0.5"/><path d="M100 85 L100 35 M70 50 L130 48" stroke="#cdddff" stroke-width="0.7" opacity="0.35"/></svg>
+          </div>
+          <p class="gallery-card-crop">Peppers</p>
+          <h3>Targeted Picking</h3>
+          <p>Manipulate flexible branches while avoiding damage to neighboring fruit and flowers.</p>
+        </article>
+        <article class="gallery-card" data-crop="custom">
+          <div class="gallery-card-viz" aria-hidden="true">
+            <svg viewBox="0 0 200 100"><circle cx="100" cy="50" r="20" fill="none" stroke="#cdddff" stroke-width="0.8" stroke-dasharray="4 6" opacity="0.5"/><circle class="g-pulse" cx="100" cy="50" r="6" fill="#cdddff"/></svg>
+          </div>
+          <p class="gallery-card-crop">Your Crop</p>
+          <h3>Custom Tasks</h3>
+          <p>Fine-tune in simulation using your crop morphology and deploy without rewriting the control stack.</p>
+        </article>
+      </div>
+    </div>
+    <div class="gallery-spacer" id="gallerySpacer" aria-hidden="true"></div>
+  </section>
+
+  <!-- ========== SECTION: INFRASTRUCTURE ========== -->
+  <section class="section-infra" id="infra">
+    <p class="section-label">Infrastructure</p>
+    <h2>Not a gadget. <span>The intelligence layer beneath the arm.</span></h2>
+    <p>Fal Robotics provides the control layer you integrate once:</p>
+    <ul class="infra-features">
+      <li>API access</li>
+      <li>Simulation environment</li>
+      <li>Training pipeline</li>
+      <li>Deployment tooling</li>
+    </ul>
+    <p class="infra-tagline">Your hardware. Our intelligence.</p>
+    <p class="infra-audience-label">Built for:</p>
+    <ul class="infra-audience">
+      <li>Agricultural robotics OEMs</li>
+      <li>Fleet operators</li>
+      <li>Greenhouse automation platforms</li>
+      <li>Research laboratories</li>
+    </ul>
+    <p class="infra-close">No brittle demos. Production-grade plant manipulation.</p>
+  </section>
+
+  <!-- ========== SECTION: CTA ========== -->
+  <section class="section-cta" id="cta">
+    <div class="cta-ambient" aria-hidden="true">
+      <div class="cta-ambient-orb"></div>
+    </div>
+    <div class="cta-content">
+      <h2 class="cta-brand">Fal Robotics</h2>
+      <p class="cta-sub">The foundation model for plant manipulation</p>
+      <div class="cta-button-wrap" id="ctaButtonWrap">
+        <!-- CTA — edit href and label -->
+        <a href="mailto:hello@falrobotics.example" class="cta-button" id="ctaButton">Request Access</a>
+      </div>
+    </div>
+    <p class="cta-footer">© 2026 Fal Robotics · All rights reserved</p>
+  </section>
+  </div><!-- /.content-wrap -->
+
+  <script>
+    (function () {
+      "use strict";
+
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (typeof MotionPathPlugin !== "undefined") {
+        gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
+      } else {
+        gsap.registerPlugin(ScrollTrigger);
+      }
+
+      const capabilityVizLoops = [];
+      const capabilityOrbitTweens = [];
+      let activeCapabilityViz = -1;
+
+      function setActiveCapabilityViz(index) {
+        if (activeCapabilityViz === index) return;
+        capabilityVizLoops.forEach((tl) => tl && tl.pause());
+        capabilityOrbitTweens.forEach((t) => t.pause());
+        activeCapabilityViz = index;
+        if (capabilityVizLoops[index]) capabilityVizLoops[index].restart();
+        if (index === 2) capabilityOrbitTweens.forEach((t) => t.play());
+      }
+
+      /* ========== CAPABILITY VIZ LOOP ANIMATIONS ========== */
+      function initCapabilityVizLoops() {
+        if (prefersReducedMotion) return;
+
+        const scan = document.getElementById("vizScanLine");
+        const bbox1 = document.getElementById("vizBbox1");
+        const bbox2 = document.getElementById("vizBbox2");
+        const mask = document.getElementById("vizMaskFruit");
+
+        if (scan && bbox1) {
+          const vision = gsap.timeline({ repeat: -1, paused: true });
+          vision
+            .set(scan, { attr: { y1: 24, y2: 24 }, opacity: 0.85 })
+            .set([bbox1, bbox2, mask], { opacity: 0 })
+            .to(scan, { attr: { y1: 270, y2: 270 }, duration: 2.8, ease: "none" })
+            .to(bbox1, { opacity: 1, duration: 0.35 }, 0.7)
+            .to(bbox2, { opacity: 1, duration: 0.35 }, 0.95)
+            .to(mask, { opacity: 1, duration: 0.45 }, 1.1)
+            .to(scan, { opacity: 0, duration: 0.25 }, 2.6)
+            .to([bbox1, bbox2, mask], { opacity: 0, duration: 0.4 }, 2.75);
+          capabilityVizLoops[0] = vision;
+        }
+
+        const arm = document.getElementById("vizArmPath");
+        const forces = ["#vizForce1", "#vizForce2", "#vizForceHead1", "#vizForceHead2"];
+        const contact = document.getElementById("vizContact");
+
+        if (arm) {
+          const interaction = gsap.timeline({ repeat: -1, paused: true });
+          interaction
+            .set(arm, { strokeDashoffset: 280 })
+            .set(forces.join(","), { opacity: 0 })
+            .set(contact, { opacity: 0, attr: { r: 5 } })
+            .to(arm, { strokeDashoffset: 0, duration: 2.2, ease: "power2.inOut" })
+            .to(contact, { opacity: 1, attr: { r: 11 }, duration: 0.35 }, "-=0.5")
+            .to(forces.join(","), { opacity: 1, duration: 0.3, stagger: 0.08 }, "-=0.35")
+            .to(forces.join(","), { opacity: 0.2, duration: 0.5, yoyo: true, repeat: 2 })
+            .to(arm, { strokeDashoffset: 280, duration: 1.6, ease: "power2.in" }, "+=0.2")
+            .to(contact, { opacity: 0, duration: 0.25 }, "-=1.2");
+          capabilityVizLoops[1] = interaction;
+        }
+
+        const crops = ["#vizCrop1", "#vizCrop2", "#vizCrop3", "#vizCrop4"];
+        const brain = document.getElementById("vizBrain");
+        if (brain) {
+          const orbit = (selector, radius, offset) => {
+            const el = document.querySelector(selector);
+            if (!el) return;
+            const tween = gsap.to(el, {
+              duration: 5 + offset,
+              repeat: -1,
+              ease: "none",
+              paused: true,
+              onUpdate: function () {
+                const a = this.progress() * Math.PI * 2 + offset;
+                gsap.set(el, {
+                  attr: {
+                    cx: 160 + Math.cos(a) * radius,
+                    cy: 160 + Math.sin(a) * radius * 0.75,
+                  },
+                });
+              },
+            });
+            capabilityOrbitTweens.push(tween);
+          };
+          const generalize = gsap.timeline({ repeat: -1, paused: true });
+          generalize
+            .to(brain, { attr: { r: 17 }, duration: 1.2, ease: "sine.inOut", yoyo: true, repeat: 1 })
+            .to(crops.join(","), { opacity: 1, duration: 0.6, stagger: 0.1 }, 0);
+          capabilityVizLoops[2] = generalize;
+          orbit("#vizCrop1", 78, 0);
+          orbit("#vizCrop2", 88, 1.2);
+          orbit("#vizCrop3", 72, 2.4);
+          orbit("#vizCrop4", 82, 3.6);
+        }
+      }
+
+      /* ========== SCROLL PROGRESS BAR ========== */
+      function initScrollProgress() {
+        const bar = document.getElementById("scrollProgress");
+        ScrollTrigger.create({
+          start: 0,
+          end: "max",
+          onUpdate: (self) => {
+            document.documentElement.style.setProperty("--scroll-progress", (self.progress * 100) + "%");
+          },
+        });
+      }
+
+      /* ========== HERO VIDEO — scroll-scrub descent + parallax ========== */
+      function initHeroVideoScroll() {
+        const hero = document.getElementById("hero");
+        const video = document.getElementById("heroVideo");
+        const media = document.getElementById("heroMedia");
+        const vignette = document.getElementById("heroVignette");
+        const center = document.getElementById("heroCenter");
+        const hint = document.querySelector(".hero-scroll-hint");
+
+        if (!hero || !video || !media) return;
+
+        const primeVideo = () => {
+          video.pause();
+          video.currentTime = 0;
+        };
+
+        video.addEventListener("loadedmetadata", primeVideo, { once: true });
+
+        if (prefersReducedMotion) {
+          video.loop = true;
+          video.autoplay = true;
+          video.play().catch(() => {});
+          return;
+        }
+
+        gsap.set(video, { scale: 1.08, transformOrigin: "center center" });
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: hero,
+            start: "top top",
+            end: "+=150%",
+            pin: true,
+            scrub: 0.6,
+            anticipatePin: 1,
+            onUpdate: (self) => {
+              if (video.duration && isFinite(video.duration)) {
+                const t = Math.min(video.duration - 0.05, Math.max(0, self.progress * video.duration));
+                if (Math.abs(video.currentTime - t) > 0.04) {
+                  video.currentTime = t;
+                }
+              }
+            },
+          },
+        });
+
+        tl.to(video, { scale: 1.32, ease: "none" }, 0);
+        tl.to(media, { y: "-10%", ease: "none" }, 0);
+
+        if (vignette) {
+          tl.to(vignette, { opacity: 0.72, ease: "none" }, 0);
+        }
+
+        if (center) {
+          tl.to(center, {
+            y: -90,
+            opacity: 0,
+            filter: "blur(8px)",
+            ease: "power2.in",
+          }, 0);
+        }
+
+        if (hint) {
+          tl.to(hint, { opacity: 0, y: 24, ease: "power2.in" }, 0);
+        }
+
+        video.addEventListener("canplay", () => ScrollTrigger.refresh(), { once: true });
+      }
+
+      /* ========== NAV — solid on scroll past hero ========== */
+      function initNavScroll() {
+        const nav = document.getElementById("nav");
+        const hero = document.getElementById("hero");
+        if (!nav || !hero) return;
+
+        ScrollTrigger.create({
+          trigger: hero,
+          start: "bottom top",
+          onEnter: () => nav.classList.add("is-solid"),
+          onLeaveBack: () => nav.classList.remove("is-solid"),
+        });
+      }
+
+      /* ========== CAPABILITIES: PINNED SCROLL + VIZ MORPH ========== */
+      function initCapabilities() {
+        const section = document.querySelector(".section-capabilities");
+        const slides = gsap.utils.toArray(".capability-slide");
+        const segs = gsap.utils.toArray(".capabilities-progress-seg");
+        const vizLayers = gsap.utils.toArray(".capability-viz");
+        if (!section || !slides.length) return;
+
+        if (prefersReducedMotion) {
+          slides.forEach((s, i) => {
+            s.classList.toggle("is-active", i === 0);
+            s.style.opacity = i === 0 ? 1 : 0;
+            if (segs[i]) segs[i].style.transform = "scaleX(1)";
+          });
+          vizLayers.forEach((v, i) => {
+            v.classList.toggle("is-active", i === 0);
+            v.style.opacity = i === 0 ? 1 : 0;
+          });
+          return;
+        }
+
+        gsap.set(slides, { opacity: 0, x: 40, visibility: "hidden" });
+        gsap.set(slides[0], { opacity: 1, x: 0, visibility: "visible" });
+        gsap.set(segs, { scaleX: 0, transformOrigin: "left" });
+        gsap.set(vizLayers, { opacity: 0, scale: 0.92, filter: "blur(10px)", visibility: "hidden" });
+        gsap.set(vizLayers[0], { opacity: 1, scale: 1, filter: "blur(0px)", visibility: "visible" });
+        vizLayers[0].classList.add("is-active");
+        setActiveCapabilityViz(0);
+
+        const total = slides.length;
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: () => "+=" + window.innerHeight * (total + 0.5),
+            pin: ".capabilities-pin",
+            scrub: 0.8,
+            anticipatePin: 1,
+          },
+        });
+
+        slides.forEach((slide, i) => {
+          if (i === 0) {
+            tl.to(segs[0], { scaleX: 1, duration: 0.33, ease: "power2.out" }, 0);
+            return;
+          }
+          const t = i / total;
+          const prevViz = vizLayers[i - 1];
+          const nextViz = vizLayers[i];
+
+          tl.to(slides[i - 1], { opacity: 0, x: -36, duration: 0.35, ease: "power2.in" }, t)
+            .to(
+              prevViz,
+              { opacity: 0, scale: 0.88, x: -20, filter: "blur(12px)", duration: 0.35, ease: "power2.in" },
+              t
+            )
+            .to(slides[i], { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" }, t)
+            .to(
+              nextViz,
+              { opacity: 1, scale: 1, x: 0, filter: "blur(0px)", duration: 0.35, ease: "power2.out" },
+              t
+            )
+            .to(segs[i], { scaleX: 1, duration: 0.33, ease: "power2.out" }, t)
+            .set(slides[i - 1], { visibility: "hidden" })
+            .set(slides[i], { visibility: "visible" }, t)
+            .set(prevViz, { visibility: "hidden" })
+            .set(nextViz, { visibility: "visible" }, t)
+            .call(() => {
+              prevViz.classList.remove("is-active");
+              nextViz.classList.add("is-active");
+              setActiveCapabilityViz(i);
+            }, null, t);
+        });
+      }
+
+      /* ========== SIM PLANT GRID ========== */
+      function initSimPlantGrid() {
+        const grid = document.getElementById("simPlantGrid");
+        if (!grid || prefersReducedMotion) return;
+
+        const NS = "http://www.w3.org/2000/svg";
+        const plants = [];
+
+        for (let i = 0; i < 14; i++) {
+          const cx = 18 + Math.random() * 244;
+          const cy = 18 + Math.random() * 95;
+          const h = 18 + Math.random() * 28;
+          const g = document.createElementNS(NS, "g");
+
+          const stem = document.createElementNS(NS, "line");
+          stem.setAttribute("x1", cx);
+          stem.setAttribute("y1", cy + h);
+          stem.setAttribute("x2", cx);
+          stem.setAttribute("y2", cy);
+          stem.setAttribute("class", "sim-plant");
+
+          const crown = document.createElementNS(NS, "circle");
+          crown.setAttribute("cx", cx + (Math.random() - 0.5) * 10);
+          crown.setAttribute("cy", cy - 4);
+          crown.setAttribute("r", 3 + Math.random() * 4);
+          crown.setAttribute("fill", "none");
+          crown.setAttribute("stroke", Math.random() > 0.5 ? "#cdddff" : "#70707d");
+          crown.setAttribute("stroke-width", "0.6");
+          crown.setAttribute("opacity", "0.35");
+
+          g.appendChild(stem);
+          g.appendChild(crown);
+          grid.appendChild(g);
+          plants.push(g);
+        }
+
+        gsap.from(plants, {
+          opacity: 0,
+          scale: 0.6,
+          transformOrigin: "center center",
+          duration: 0.5,
+          stagger: { each: 0.04, from: "random" },
+          ease: "power2.out",
+        });
+
+        plants.forEach((g, i) => {
+          gsap.to(g, {
+            y: (Math.random() - 0.5) * 10,
+            x: (Math.random() - 0.5) * 8,
+            duration: 2.2 + Math.random() * 2,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            delay: i * 0.12,
+          });
+          gsap.to(g, {
+            opacity: 0.25 + Math.random() * 0.35,
+            duration: 1.4 + Math.random(),
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            delay: i * 0.08,
+          });
+        });
+      }
+
+      /* ========== HERO VIZ PULSE ========== */
+      function initHeroVizMotion() {
+        if (prefersReducedMotion) return;
+        gsap.utils.toArray(".hero-visual .hero-pulse").forEach((el, i) => {
+          const baseR = parseFloat(el.getAttribute("r") || 6);
+          gsap.to(el, {
+            attr: { r: baseR + 3 },
+            opacity: 0.85,
+            duration: 1.8 + i * 0.2,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            delay: i * 0.25,
+          });
+        });
+      }
+
+      let realArmTween = null;
+      let realGlowTween = null;
+
+      /* ========== SIM-TO-REAL: PANELS + CONNECTOR + TRANSFER ========== */
+      function initSimReal() {
+        const section = document.getElementById("simreal");
+        const panelSim = document.getElementById("panelSim");
+        const panelReal = document.getElementById("panelReal");
+        const line = document.getElementById("simrealLine");
+        const realArm = document.getElementById("realArm");
+        const realGlow = document.getElementById("realContactGlow");
+        const particles = [
+          document.getElementById("simParticle1"),
+          document.getElementById("simParticle2"),
+          document.getElementById("simParticle3"),
+        ].filter(Boolean);
+        const transferIds = ["transferP1", "transferP2", "transferP3"];
+
+        if (!section || prefersReducedMotion) return;
+
+        gsap.set(panelSim, { x: 40, opacity: 0.6 });
+        gsap.set(panelReal, { x: -40, opacity: 0.6 });
+        if (line) gsap.set(line, { strokeDashoffset: 220 });
+        gsap.set(particles, { opacity: 0 });
+
+        if (realArm) {
+          gsap.set(realArm, { strokeDashoffset: 120 });
+          realArmTween = gsap.to(realArm, {
+            strokeDashoffset: 0,
+            duration: 2.4,
+            repeat: -1,
+            yoyo: true,
+            ease: "power2.inOut",
+            paused: true,
+          });
+        }
+        if (realGlow) {
+          gsap.set(realGlow, { opacity: 0 });
+          realGlowTween = gsap.to(realGlow, {
+            opacity: 0.9,
+            attr: { r: 12 },
+            duration: 1.2,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            paused: true,
+          });
+        }
+
+        if (typeof MotionPathPlugin !== "undefined") {
+          transferIds.forEach((id, i) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            gsap.set(el, { opacity: 0 });
+            gsap.to(el, {
+              opacity: 0.95,
+              duration: 1.8 + i * 0.35,
+              repeat: -1,
+              ease: "none",
+              delay: i * 0.5,
+              motionPath: {
+                path: "#simrealMotionPath",
+                align: "#simrealMotionPath",
+                alignOrigin: [0.5, 0.5],
+              },
+            });
+          });
+        }
+
+        ScrollTrigger.create({
+          trigger: section,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 1,
+          onUpdate: (self) => {
+            const p = self.progress;
+            const spread = Math.min(1, p * 1.4);
+            gsap.set(panelSim, { x: 40 * (1 - spread), opacity: 0.6 + 0.4 * spread });
+            gsap.set(panelReal, { x: -40 * (1 - spread), opacity: 0.6 + 0.4 * spread });
+            if (line) {
+              gsap.set(line, { strokeDashoffset: 220 * (1 - spread) });
+            }
+            particles.forEach((pt, i) => {
+              gsap.set(pt, { opacity: spread > 0.25 + i * 0.12 ? 0.9 : 0 });
+            });
+            transferIds.forEach((id, i) => {
+              const el = document.getElementById(id);
+              if (el) gsap.set(el, { opacity: spread > 0.35 ? 0.9 - i * 0.12 : 0 });
+            });
+            if (spread > 0.5) {
+              realArmTween?.play();
+              realGlowTween?.play();
+            } else {
+              realArmTween?.pause();
+              realGlowTween?.pause();
+            }
+          },
+        });
+      }
+
+      /* ========== STATS: COUNT UP ========== */
+      function initStats() {
+        const numbers = document.querySelectorAll(".stat-number[data-stat-target]");
+        numbers.forEach((el) => {
+          const target = parseFloat(el.dataset.statTarget, 10);
+          const suffix = el.dataset.statSuffix || "";
+          const format = el.dataset.statFormat;
+
+          const obj = { val: 0 };
+
+          ScrollTrigger.create({
+            trigger: el.closest(".stat-item"),
+            start: "top 85%",
+            once: true,
+            onEnter: () => {
+              if (prefersReducedMotion) {
+                el.textContent = format === "compact" ? formatCompact(target) : Math.round(target) + suffix;
+                return;
+              }
+              gsap.to(obj, {
+                val: target,
+                duration: 2,
+                ease: "power2.out",
+                onUpdate: () => {
+                  const v = obj.val;
+                  if (format === "compact") {
+                    el.textContent = formatCompact(Math.round(v));
+                  } else {
+                    el.textContent = Math.round(v) + suffix;
+                  }
+                },
+              });
+            },
+          });
+        });
+      }
+
+      function formatCompact(n) {
+        if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "") + "k";
+        return String(n);
+      }
+
+      /* ========== GALLERY: HORIZONTAL SCROLL ========== */
+      function initGallery() {
+        const section = document.getElementById("gallery");
+        const track = document.getElementById("galleryTrack");
+        const spacer = document.getElementById("gallerySpacer");
+        const cards = gsap.utils.toArray(".gallery-card");
+        if (!section || !track || !spacer) return;
+
+        const getScrollAmount = () => {
+          const pad = parseFloat(getComputedStyle(document.documentElement).fontSize) * 3;
+          return -(track.scrollWidth - window.innerWidth + pad);
+        };
+
+        if (prefersReducedMotion) {
+          track.style.flexWrap = "wrap";
+          spacer.style.display = "none";
+          return;
+        }
+
+        const scrollTween = gsap.to(track, {
+          x: getScrollAmount,
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: () => "+=" + Math.max(track.scrollWidth, window.innerWidth),
+            pin: true,
+            scrub: 1,
+            invalidateOnRefresh: true,
+            anticipatePin: 1,
+          },
+        });
+
+        cards.forEach((card) => {
+          ScrollTrigger.create({
+            trigger: card,
+            containerAnimation: scrollTween,
+            start: "left 55%",
+            end: "right 45%",
+            horizontal: true,
+            onToggle: (self) => {
+              card.classList.toggle("is-center", self.isActive);
+              gsap.to(card, {
+                y: self.isActive ? -12 : 0,
+                opacity: self.isActive ? 1 : 0.55,
+                filter: self.isActive ? "brightness(1.08)" : "brightness(0.85)",
+                duration: 0.5,
+                ease: "power2.out",
+                overwrite: "auto",
+              });
+              if (prefersReducedMotion) return;
+              const pulses = card.querySelectorAll(".g-pulse");
+              const arm = card.querySelector(".g-arm");
+              if (self.isActive) {
+                gsap.fromTo(pulses, { scale: 0.85, opacity: 0.4 }, { scale: 1, opacity: 1, duration: 0.5, stagger: 0.06 });
+                pulses.forEach((p, idx) => {
+                  const r = parseFloat(p.getAttribute("r") || 5);
+                  gsap.to(p, { attr: { r: r + 2 }, duration: 0.7, yoyo: true, repeat: 2, delay: idx * 0.1 });
+                });
+                if (arm) {
+                  gsap.fromTo(arm, { strokeDashoffset: 80 }, { strokeDashoffset: 0, duration: 1.1, ease: "power2.out" });
+                }
+              }
+            },
+          });
+        });
+      }
+
+      /* ========== CTA: MAGNETIC BUTTON ========== */
+      function initMagneticButton() {
+        const wrap = document.getElementById("ctaButtonWrap");
+        const btn = document.getElementById("ctaButton");
+        if (!wrap || !btn || prefersReducedMotion) return;
+
+        const strength = 0.35;
+        wrap.addEventListener("mousemove", (e) => {
+          const rect = wrap.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dx = (e.clientX - cx) * strength;
+          const dy = (e.clientY - cy) * strength;
+          gsap.to(btn, { x: dx, y: dy, duration: 0.4, ease: "power2.out" });
+        });
+
+        wrap.addEventListener("mouseleave", () => {
+          gsap.to(btn, { x: 0, y: 0, duration: 0.7, ease: "power3.out" });
+        });
+      }
+
+      /* ========== CTA: AMBIENT DRIFT ========== */
+      function initCtaAmbient() {
+        const orb = document.querySelector(".cta-ambient-orb");
+        if (!orb || prefersReducedMotion) return;
+
+        gsap.to(orb, {
+          scale: 1.15,
+          opacity: 0.9,
+          duration: 8,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+        });
+      }
+
+      /* ========== FADE-IN SECTIONS (subtle) ========== */
+      function initSectionReveals() {
+        if (prefersReducedMotion) return;
+
+        gsap.utils.toArray(".section-problem, .section-infra, .gallery-header").forEach((el) => {
+          gsap.from(el, {
+            opacity: 0,
+            y: 48,
+            duration: 1.2,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: el,
+              start: "top 82%",
+              toggleActions: "play none none none",
+            },
+          });
+        });
+      }
+
+      /* ========== INIT ========== */
+      function init() {
+        initScrollProgress();
+        initHeroVideoScroll();
+        initNavScroll();
+        initCapabilityVizLoops();
+        initCapabilities();
+        initSimPlantGrid();
+        initSimReal();
+        initStats();
+        initGallery();
+        initMagneticButton();
+        initCtaAmbient();
+        initSectionReveals();
+
+        window.addEventListener("load", () => ScrollTrigger.refresh());
+        window.addEventListener("resize", () => ScrollTrigger.refresh());
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
