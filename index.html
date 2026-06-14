@@ -11,7 +11,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,10 +40,8 @@
       --radius-pill: 999px;
       --max: 1240px;
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
-      --font: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
-      --font-display: "Lexend", "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+      --font: "Inter", ui-sans-serif, system-ui, sans-serif;
       --scroll-progress: 0%;
-      --transition: 200ms var(--ease);
     }
 
     html {
@@ -55,22 +53,6 @@
     }
 
     body { overflow-x: hidden; line-height: 1.5; background: var(--white); }
-
-    a, button, .nav-pill, .cta-button, .gallery-card { cursor: pointer; }
-
-    a:focus-visible,
-    .nav-pill:focus-visible,
-    .cta-button:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 3px;
-    }
-
-    .skip-link {
-      position: absolute; left: -9999px; top: 0; z-index: 10001;
-      padding: 10px 16px; background: var(--accent); color: var(--white);
-      border-radius: 8px; font-weight: 500; text-decoration: none;
-    }
-    .skip-link:focus { left: 16px; top: 16px; }
 
     .scroll-progress {
       position: fixed; top: 0; left: 0; height: 2px;
@@ -91,22 +73,19 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-logo {
-      font-family: var(--font-display);
       font-size: clamp(14px, 1.4vw, 17px); font-weight: 600; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--ink); text-decoration: none;
-      transition: color var(--transition);
     }
-    .nav-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .nav-links { display: flex; gap: 10px; align-items: center; }
     .nav-pill {
       font-size: 13px; font-weight: 500; color: var(--ink-secondary);
       text-decoration: none; padding: 8px 18px;
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-pill);
       background: var(--white);
-      transition: background var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
+      transition: background 0.3s, border-color 0.3s, color 0.3s;
     }
-    .nav-pill:hover { background: var(--surface); border-color: var(--accent-soft); transform: translateY(-1px); }
-    .nav-pill.is-active { color: var(--accent); border-color: rgba(74, 90, 232, 0.35); background: var(--accent-tint); }
+    .nav-pill:hover { background: var(--surface); border-color: var(--border-strong); }
     .nav-pill--accent {
       background: var(--accent); border-color: transparent; color: var(--white);
     }
@@ -128,7 +107,6 @@
     }
 
     .hero-brand {
-      font-family: var(--font-display);
       font-size: clamp(2.25rem, 5.5vw, 4rem);
       font-weight: 500;
       letter-spacing: -0.03em;
@@ -148,7 +126,6 @@
     }
 
     .hero-headline {
-      font-family: var(--font-display);
       text-align: center;
       font-size: clamp(2rem, 5.5vw, 3.75rem);
       font-weight: 300;
@@ -215,60 +192,11 @@
       padding: 0 clamp(20px, 4vw, 48px);
     }
 
-    /* ── TRUST STRIP (social proof) ── */
-    .section-trust {
-      background: var(--white);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: clamp(40px, 6vh, 64px) clamp(20px, 4vw, 48px);
-    }
-    .trust-inner {
-      max-width: var(--max); margin: 0 auto; text-align: center;
-    }
-    .trust-label {
-      font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--muted-light); margin-bottom: 28px;
-    }
-    .trust-metrics {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: clamp(20px, 4vw, 40px);
-      margin-bottom: 36px;
-    }
-    @media (max-width: 640px) { .trust-metrics { grid-template-columns: 1fr; } }
-    .trust-metric strong {
-      display: block;
-      font-family: var(--font-display);
-      font-size: clamp(1.5rem, 3vw, 2rem);
-      font-weight: 600;
-      color: var(--accent);
-      letter-spacing: -0.02em;
-      margin-bottom: 6px;
-    }
-    .trust-metric span { font-size: 0.92rem; color: var(--muted); line-height: 1.45; }
-    .trust-audience {
-      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-    }
-    .trust-chip {
-      font-size: 12px; font-weight: 500; color: var(--ink-secondary);
-      padding: 8px 16px; border-radius: var(--radius-pill);
-      border: 1px solid var(--border); background: var(--surface);
-      transition: border-color var(--transition), background var(--transition);
-    }
-    .trust-chip:hover { border-color: rgba(74, 90, 232, 0.3); background: var(--accent-tint); }
-
     /* ── OVERVIEW ── */
     .section-overview {
       background: var(--surface);
       color: var(--ink);
       padding: clamp(80px, 12vh, 140px) clamp(20px, 4vw, 48px);
-      position: relative;
-    }
-    .section-overview::before {
-      content: "";
-      position: absolute; inset: 0; pointer-events: none; opacity: 0.45;
-      background-image: radial-gradient(circle at 1px 1px, rgba(17,17,21,0.06) 1px, transparent 0);
-      background-size: 24px 24px;
     }
     .overview-grid {
       max-width: var(--max);
@@ -277,7 +205,6 @@
       grid-template-columns: 1fr 1fr;
       gap: clamp(40px, 6vw, 80px);
       align-items: center;
-      position: relative; z-index: 1;
     }
     @media (max-width: 900px) {
       .overview-grid { grid-template-columns: 1fr; }
@@ -314,7 +241,6 @@
       margin-bottom: 24px;
     }
     .overview-copy h2 {
-      font-family: var(--font-display);
       font-size: clamp(2rem, 4.5vw, 3.25rem);
       font-weight: 500;
       letter-spacing: -0.03em;
@@ -426,7 +352,6 @@
     }
     .platform-visual svg { width: 100%; height: 100%; display: block; }
     .platform-copy h3 {
-      font-family: var(--font-display);
       font-size: clamp(1.5rem, 3vw, 2.25rem);
       font-weight: 500;
       letter-spacing: -0.02em;
@@ -537,9 +462,8 @@
       border: 1px solid var(--border);
       border-radius: 20px;
       box-shadow: var(--shadow-sm);
-      transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease), transform 0.25s var(--ease);
+      transition: border-color 0.4s, box-shadow 0.4s, transform 0.4s;
     }
-    .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(17, 17, 21, 0.08); }
     .gallery-card.is-center {
       border-color: rgba(74, 90, 232, 0.35);
       box-shadow: 0 16px 48px rgba(74, 90, 232, 0.12);
@@ -568,7 +492,6 @@
       text-align: center;
     }
     .cta-brand {
-      font-family: var(--font-display);
       font-size: clamp(2.5rem, 8vw, 5rem);
       font-weight: 500;
       letter-spacing: -0.04em;
@@ -617,15 +540,12 @@
     window.FAL_ACCESS_FORM = "https://forms.gle/PLACEHOLDER_SUBMIT_AFTER_CREATING_FORM";
   </script>
 
-  <a href="#overview" class="skip-link">Skip to content</a>
-
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
-  <nav class="nav" id="nav" aria-label="Primary">
+  <nav class="nav" id="nav">
     <a href="#" class="nav-logo">Fal Robotics</a>
     <div class="nav-links">
-      <a href="#overview" class="nav-pill nav-link" data-section="overview">Overview</a>
-      <a href="#platforms" class="nav-pill nav-link" data-section="platforms">Platforms</a>
+      <a href="#platforms" class="nav-pill">Platforms</a>
       <a href="#" class="nav-pill nav-pill--accent access-form-link">Request Access</a>
     </div>
   </nav>
@@ -663,33 +583,6 @@
       The foundation model for plant manipulation — trained in simulation, deployed on real hardware.
     </p>
   </header>
-
-  <!-- TRUST / SOCIAL PROOF -->
-  <section class="section-trust reveal-block" id="trust" aria-label="Trust and credibility">
-    <div class="trust-inner">
-      <p class="trust-label">Built for production teams</p>
-      <div class="trust-metrics">
-        <div class="trust-metric">
-          <strong>&gt;80%</strong>
-          <span>Task success across initial deployment partners</span>
-        </div>
-        <div class="trust-metric">
-          <strong>10k+</strong>
-          <span>Parallel simulation trials per training cycle</span>
-        </div>
-        <div class="trust-metric">
-          <strong>1 stack</strong>
-          <span>Unified policy across crops and manipulation tasks</span>
-        </div>
-      </div>
-      <div class="trust-audience">
-        <span class="trust-chip">Ag robotics OEMs</span>
-        <span class="trust-chip">Fleet operators</span>
-        <span class="trust-chip">Greenhouse automation</span>
-        <span class="trust-chip">Research labs</span>
-      </div>
-    </div>
-  </section>
 
   <!-- OVERVIEW -->
   <section class="section-overview" id="overview">
@@ -870,20 +763,6 @@
         link.href = window.FAL_ACCESS_FORM;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
-      });
-
-      /* Active nav on scroll */
-      const navLinks = gsap.utils.toArray(".nav-link");
-      navLinks.forEach((link) => {
-        const id = link.dataset.section;
-        const section = document.getElementById(id);
-        if (!section) return;
-        ScrollTrigger.create({
-          trigger: section,
-          start: "top 40%",
-          end: "bottom 40%",
-          onToggle: (self) => link.classList.toggle("is-active", self.isActive),
-        });
       });
 
       /* ── Scroll progress ── */
